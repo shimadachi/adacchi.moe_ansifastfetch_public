@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Convert images to ANSI art for Fastfetch data-raw logos." />
+    <title>fastfetch Compatible image to ANSI Converter</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <h1 id="page-title">fastfetch Compatible<br /> <em>image to ANSI Converter</em></h1>
+        <p>Drop in an image, tune the terminal footprint and palette, then copy a valid <code>data-raw</code> source. Nothing leaves your browser.</p>
+      </section>
+
+      <section class="workspace" aria-label="Image converter">
+        <aside class="control-panel">
+          <div class="panel-heading">
+            <h2>Choose an image</h2>
+          </div>
+
+          <label class="drop-zone" id="dropZone" for="fileInput" tabindex="0">
+            <input id="fileInput" type="file" accept="image/*" hidden />
+            <span class="upload-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4.5A1.5 1.5 0 006.5 20h11a1.5 1.5 0 001.5-1.5V14" /></svg>
+            </span>
+            <strong id="dropTitle">Drop an image here</strong>
+            <span id="dropSubtitle">or click to browse · PNG, JPG, WEBP, GIF</span>
+            <span class="file-pill" id="filePill" hidden></span>
+          </label>
+
+          <div class="rule"></div>
+
+          <div class="panel-heading compact">
+            <h2>Shape &amp; color</h2>
+          </div>
+
+          <div class="field-grid two-cols">
+            <label class="field">
+              <span>Width <small>columns</small></span>
+              <input id="widthInput" type="number" min="8" max="160" value="48" inputmode="numeric" />
+            </label>
+            <label class="field">
+              <span>Height <small>rows</small></span>
+              <input id="heightInput" type="number" min="4" max="100" value="24" inputmode="numeric" />
+            </label>
+          </div>
+
+          <label class="check-row">
+            <input id="lockRatio" type="checkbox" checked />
+            <span class="fake-check" aria-hidden="true"></span>
+            Keep image proportions
+          </label>
+
+          <label class="field">
+            <span>Color mode</span>
+            <span class="select-wrap">
+              <select id="colorMode">
+                <option value="truecolor">Truecolor · 24-bit</option>
+                <option value="xterm256">xterm · 256 colors</option>
+                <option value="ansi16">ANSI · 16 colors</option>
+                <option value="mono">Monochrome</option>
+              </select>
+            </span>
+          </label>
+
+          <label class="field">
+            <span>Image fit</span>
+            <span class="select-wrap">
+              <select id="fitMode">
+                <option value="contain">Contain</option>
+                <option value="cover">Cover</option>
+                <option value="stretch">Stretch</option>
+              </select>
+            </span>
+          </label>
+
+          <div class="field-grid two-cols">
+            <label class="field">
+              <span>Background</span>
+              <span class="select-wrap">
+                <select id="backgroundMode">
+                  <option value="transparent">Transparent</option>
+                  <option value="solid">Solid color</option>
+                </select>
+              </span>
+            </label>
+            <label class="field color-field is-disabled" id="backgroundColorField">
+              <span>Fill color</span>
+              <span class="color-control">
+                <input id="backgroundColor" type="color" value="#111318" disabled />
+                <output id="backgroundColorValue">#111318</output>
+              </span>
+            </label>
+          </div>
+
+          <label class="check-row">
+            <input id="ditherToggle" type="checkbox" />
+            <span class="fake-check" aria-hidden="true"></span>
+            Ordered dithering
+            <span class="hint" title="Helps reduced palettes preserve gradients">?</span>
+          </label>
+
+        </aside>
+
+        <section class="preview-panel" aria-live="polite">
+          <div class="preview-toolbar">
+            <div class="panel-heading compact">
+              <h2>Terminal preview</h2>
+            </div>
+            <div class="preview-actions">
+              <button class="icon-button" id="decreaseZoom" type="button" aria-label="Zoom out">−</button>
+              <output id="zoomValue">100%</output>
+              <button class="icon-button" id="increaseZoom" type="button" aria-label="Zoom in">+</button>
+            </div>
+          </div>
+
+          <div class="terminal-shell">
+            <div class="terminal-bar">
+              <div class="window-title">
+                <span class="window-icon" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2" width="13" height="11.5" rx=".8"/><path d="M4 6l2.3 2L4 10m3.7 0h3.8"/></svg>
+                </span>
+              </div>
+              <div class="window-controls" aria-hidden="true">
+                <button type="button" tabindex="-1" aria-label="Minimize"></button>
+                <button type="button" tabindex="-1" aria-label="Maximize"></button>
+                <button type="button" tabindex="-1" aria-label="Close"></button>
+              </div>
+            </div>
+            <div class="terminal-stage" id="terminalStage">
+              <div class="empty-state" id="emptyState">
+                <div class="empty-glyph" aria-hidden="true">
+                  <span>▀▄▀▄</span><span>▄▀▄▀</span><span>▀▄▀▄</span>
+                </div>
+                <strong id="emptyTitle">Your ANSI logo will appear here</strong>
+                <span id="emptySubtitle">Choose an image to get started</span>
+              </div>
+              <pre id="ansiPreview" aria-label="ANSI logo preview" hidden></pre>
+            </div>
+          </div>
+
+          <div class="stats" id="stats" aria-label="Conversion statistics">
+            <div><span>Dimensions</span><strong id="statDimensions">—</strong></div>
+            <div><span>ANSI size</span><strong id="statSize">—</strong></div>
+            <div><span>Colors</span><strong id="statColors">—</strong></div>
+            <div><span>Encoding</span><strong id="statEncoding">UTF-8</strong></div>
+          </div>
+        </section>
+      </section>
+
+      <section class="output-section" id="outputSection" aria-labelledby="output-title">
+        <div class="output-heading">
+          <div>
+            <h2 id="output-title">Fastfetch output</h2>
+          </div>
+          <p>Add this <code>logo</code> property inside your existing Fastfetch <code>config.jsonc</code>. Replace its current <code>logo</code> property if it already has one.</p>
+        </div>
+
+        <div class="code-card">
+          <div class="code-tabs" role="tablist" aria-label="Output format">
+            <button class="tab is-active" role="tab" aria-selected="true" data-tab="config">JSONC logo</button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="raw">Raw ANSI</button>
+            <div class="tab-spacer"></div>
+            <button class="copy-button" id="copyButton" type="button" disabled>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 8V5.5A1.5 1.5 0 019.5 4h9A1.5 1.5 0 0120 5.5v9a1.5 1.5 0 01-1.5 1.5H16M5.5 8h9A1.5 1.5 0 0116 9.5v9a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 014 18.5v-9A1.5 1.5 0 015.5 8z" /></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <pre class="code-output" id="codeOutput"><code>// Your Fastfetch logo config will appear here after conversion.</code></pre>
+          <div class="download-row">
+            <span id="outputNote">Compatible with Fastfetch <code>logo.type: "data-raw"</code></span>
+            <button class="secondary-button" id="downloadButton" type="button" disabled>Download logo.jsonc</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <canvas id="workCanvas" hidden></canvas>
+    <script src="app.js"></script>
+  </body>
+</html>
